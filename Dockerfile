@@ -1,9 +1,9 @@
-From mcr.microsoft.com/dotnet/aspnet:7.0 AS Base
+From mcr.microsoft.com/dotnet/aspnet:6.0 AS Base
 WORKDIR /app
 EXPOSE 8080
 EXPOSE 8081
 
-From mcr.microsoft.com/dotnet/sdk:7.0 as build
+From mcr.microsoft.com/dotnet/sdk:6.0 as build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["API/API.csproj", "API/"]
