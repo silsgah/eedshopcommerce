@@ -1,27 +1,21 @@
-From mcr.microsoft.com/dotnet/aspnet:6.0 AS Base
+FROM mcr.microsoft.com/dotnet/sdk:7.0 AS builder
 WORKDIR /app
-EXPOSE 8080
-EXPOSE 8081
 
-From mcr.microsoft.com/dotnet/sdk:6.0 as build
-ARG BUILD_CONFIGURATION=Release
-WORKDIR /src
-COPY ["API/API.csproj", "API/"]
-COPY ["Infrastructure/Infrastructure.csproj","Infrastructure/"]
-COPY ["Entity/Entity.csproj","Entity/"]
-RUN dotnet restore "API/API.csproj"
+# caches restore result by copying csproj file separately
+COPY *.csproj .
+RUN dotnet restore
 
 COPY . .
+RUN dotnet publish --output /app/ --configuration Release --no-restore
+RUN sed -n 's:.*<AssemblyName>\(.*\)</AssemblyName>.*:\1:p' *.csproj > __assemblyname
+RUN if [ ! -s __assemblyname ]; then filename=$(ls *.csproj); echo ${filename%.*} > __assemblyname; fi
 
-WORKDIR "/src/API"
-
-RUN dotnet build "API.csproj" -c $BUILD_CONFIGURATION -o /app/build
-
-FROM build as publish
-ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "API.csproj" -c $BUILD_CONFIGURATION -o /app/publish 
-
-FROM base AS final
+# Stage 2
+FROM mcr.microsoft.com/dotnet/aspnet:7.0
 WORKDIR /app
-COPY --from=publish /app/publish .
-ENTRYPOINT [ "dotnet","API.dll" ]
+COPY --from=builder /app .
+
+ENV PORT 5000
+EXPOSE 5000
+
+ENTRYPOINT dotnet $(cat /app/__assemblyname).dll --urls "http://*:5000"
