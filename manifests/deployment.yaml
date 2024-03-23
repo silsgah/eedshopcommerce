@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: eedconsultkts
+  labels:
+    app: eedconsultkts
+  namespace: namespace-workflow-1711217598506
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: eedconsultkts
+  template:
+    metadata:
+      labels:
+        app: eedconsultkts
+    spec:
+      containers:
+        - name: eedconsultkts
+          image: acrworkflow1711217598506.azurecr.io/image-workflow-1711217598506:latest
+          ports:
+            - containerPort: 5000
